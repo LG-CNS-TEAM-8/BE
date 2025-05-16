@@ -17,11 +17,13 @@ public class AuthService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String login(String email, String password){
+    public UserLoginResponse login(String email, String password){
         User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Invalid email"));
         if(!user.getPassword().equals(password))
-            return "Invalid password";
-        return "token"+ jwtTokenProvider.generateAccessToken(user.getId());
+            throw new IllegalArgumentException("Invalid password");
+        return UserLoginResponse.builder()
+                .accessToken(jwtTokenProvider.generateAccessToken(user.getId()))
+                .build();
     }
 
     @Transactional
