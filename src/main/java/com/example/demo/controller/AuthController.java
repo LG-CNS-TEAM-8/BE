@@ -35,23 +35,3 @@ public class AuthController {
         return authService.signUp(user);
     }
 }
-
-@Data
-class LoginRequest {
-    private String email;
-    private String password;
-}
-
-@Data
-class SignUpRequest {
-    private String email;
-    private String password;
-    private String name;
-    private Role role = Role.valueOf("ROLE_USER");
-}
-
-@Data
-@AllArgsConstructor
-class AuthResponse {
-    private String token;
-}
