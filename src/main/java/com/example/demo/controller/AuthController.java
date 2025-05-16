@@ -19,19 +19,19 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest body){
+    public ResponseEntity<UserLoginResponse> login(@RequestBody UserLoginRequest body){
         String email = body.getEmail();
         String password = body.getPassword();
-        return authService.login(email, password);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.login(email, password));
     }
 
     @PostMapping("/sign-up")
-    public String signUp(@RequestBody SignUpRequest body){
+    public ResponseEntity<String> signUp(@RequestBody UserSignUpRequest body){
         User user = User.builder()
                 .email(body.getEmail())
                 .name(body.getName())
                 .password(body.getPassword())
                 .build();
-        return authService.signUp(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(user));
     }
 }
