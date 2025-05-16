@@ -1,16 +1,12 @@
 package com.example.demo.controller;
 
-import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
+import com.example.demo.dto.*;
 import com.example.demo.service.AuthService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,5 +29,15 @@ public class AuthController {
                 .password(body.getPassword())
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(user));
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<CreateNewAccessTokenResponse> createNewAccessToken(@RequestHeader(value = "refreshToken") String refreshToken){
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.createNewAccessToken(refreshToken));
+    }
+
+    @GetMapping("/test")
+    public String test(){
+        return "test";
     }
 }
