@@ -36,5 +36,6 @@ public class JwtFilter extends GenericFilter {
             }
         }
 
+        filterChain.doFilter(request, response);
     }
 }
