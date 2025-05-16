@@ -19,9 +19,8 @@ public class JwtFilter extends GenericFilter {
         if(token != null) {
             if (token.startsWith("Bearer ")) token = token.substring(7);
 
-            if (((HttpServletRequest) request).getRequestURI()
-                    .equals("/members/token/refresh") && jwtTokenProvider.validateRefreshToken(token)) {
-                Authentication authentication = jwtTokenProvider.getRefreshAuthentication(token);
+            if (jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } else {

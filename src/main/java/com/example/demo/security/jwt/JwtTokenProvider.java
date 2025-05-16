@@ -58,14 +58,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-//    public TokenInfo generateToken(Long userId) {
-//
-//        String accessToken = generateAccessToken(userId);
-//        String refreshToken = generateRefreshToken(userId);
-//
-//        return new TokenInfo(accessToken, refreshToken);
-//    }
-
     public Authentication getAuthentication(String token) {
         try {
             PrincipalDetails principalDetails = principalDetailsService.loadUserByUsername(
@@ -77,25 +69,11 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getRefreshAuthentication(String token) {
-        try {
-            PrincipalDetails principalDetails = principalDetailsService.loadUserByUsername(
-                    getuserIdByRefreshToken(token));
-            return new UsernamePasswordAuthenticationToken(principalDetails,
-                    "", principalDetails.getAuthorities());
-        } catch (UsernameNotFoundException exception) {
-            throw new RuntimeException("User not found");
-        }
-    }
-
     public String getuserIdByToken(String token) {
         return Jwts.parser().setSigningKey(jwtSecretKey).parseClaimsJws(token).
                 getBody().get("userId").toString();
     }
-    public String getuserIdByRefreshToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecretKey).parseClaimsJws(token).
-                getBody().get("userId").toString();
-    }
+
     public String resolveToken(HttpServletRequest request) {
         return request.getHeader(AUTHORIZATION_HEADER);
     }
@@ -105,14 +83,6 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jwts.parser().setSigningKey(jwtSecretKey).parseClaimsJws(token);
-            return true;
-        } catch (Exception e){
-            return false;
-        }
-    }
-    public boolean validateRefreshToken(String token) {
         try {
             Jwts.parser().setSigningKey(jwtSecretKey).parseClaimsJws(token);
             return true;
