@@ -2,14 +2,10 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
-import com.example.demo.security.jwt.JwtTokenProvider;
 import com.example.demo.service.AuthService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,11 +33,6 @@ public class AuthController {
                 .password(body.getPassword())
                 .build();
         return authService.signUp(user);
-    }
-
-    @GetMapping("/hello")
-    public ResponseEntity<String> hello(){
-        return ResponseEntity.ok("Hello");
     }
 }
 
