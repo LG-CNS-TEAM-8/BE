@@ -47,7 +47,7 @@ class SignUpRequest {
     private String email;
     private String password;
     private String name;
-    private String role = "ROLE_USER";
+    private Role role = Role.valueOf("ROLE_USER");
 }
 
 @Data
