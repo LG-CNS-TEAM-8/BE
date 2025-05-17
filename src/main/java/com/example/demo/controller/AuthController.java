@@ -1,16 +1,12 @@
 package com.example.demo.controller;
 
-import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
+import com.example.demo.dto.*;
 import com.example.demo.service.AuthService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,39 +15,29 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest body){
+    public ResponseEntity<UserLoginResponse> login(@RequestBody UserLoginRequest body){
         String email = body.getEmail();
         String password = body.getPassword();
-        return authService.login(email, password);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.login(email, password));
     }
 
     @PostMapping("/sign-up")
-    public String signUp(@RequestBody SignUpRequest body){
+    public ResponseEntity<String> signUp(@RequestBody UserSignUpRequest body){
         User user = User.builder()
                 .email(body.getEmail())
                 .name(body.getName())
                 .password(body.getPassword())
                 .build();
-        return authService.signUp(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(user));
     }
-}
 
-@Data
-class LoginRequest {
-    private String email;
-    private String password;
-}
+    @PostMapping("/token")
+    public ResponseEntity<CreateNewAccessTokenResponse> createNewAccessToken(@RequestHeader(value = "refreshToken") String refreshToken){
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.createNewAccessToken(refreshToken));
+    }
 
-@Data
-class SignUpRequest {
-    private String email;
-    private String password;
-    private String name;
-    private Role role = Role.valueOf("ROLE_USER");
-}
-
-@Data
-@AllArgsConstructor
-class AuthResponse {
-    private String token;
+    @GetMapping("/test")
+    public String test(){
+        return "test";
+    }
 }

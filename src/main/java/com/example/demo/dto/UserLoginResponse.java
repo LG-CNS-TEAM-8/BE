@@ -1,13 +1,11 @@
-package com.example.demo.security.jwt;
+package com.example.demo.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-@AllArgsConstructor
-public class TokenInfo {
+public class UserLoginResponse {
     private String accessToken;
     private String refreshToken;
 }
