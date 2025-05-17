@@ -1,16 +1,13 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.User;
-import com.example.demo.dto.CreateNewAccessTokenResponse;
-import com.example.demo.dto.UserLoginResponse;
+import com.example.demo.dto.response.CreateNewAccessTokenResponse;
+import com.example.demo.dto.response.UserLoginResponse;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.domain.User;
-import com.example.demo.dto.*;
+import com.example.demo.dto.request.UserLoginRequest;
+import com.example.demo.dto.request.UserSignUpRequest;
+import com.example.demo.dto.response.CreateNewAccessTokenResponse;
+import com.example.demo.dto.response.UserLoginResponse;
 import com.example.demo.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

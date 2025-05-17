@@ -1,10 +1,9 @@
 package com.example.demo.dto.request;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
-class LoginRequest {
+@Getter
+public class UserLoginRequest {
     private String email;
     private String password;
 }
-
