@@ -16,12 +16,18 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +41,8 @@ public class NewsService {
     private String CLIENT_ID;
     @Value("${naver.search.key}")
     private String CLIENT_SECRET;
+
+    private final static int TOTAL_ITEM_SIZE = 10;
 
     private final NewsRepository newsRepository;
     private final OpenAiChatModel openAiChatModel;
@@ -81,7 +89,7 @@ public class NewsService {
 
     public List<NewsResponse> getSearchNews(String search) {
         List<NewsResponse> dtos = new ArrayList<>();
-        String response = naverSearchApi(search, null);
+        String response = naverSearchApi(search, null, null);
 
         try {
             JsonNode root = objectMapper.readTree(response);
@@ -114,62 +122,68 @@ public class NewsService {
         return dtos;
     }
 
-    public List<NewsResponse> getResponse(String request, int targetCount) {
-        System.out.println("Request: " + request);
+    public List<NewsResponse> getResponse(String keyword) {
+        System.out.println("keyword : "+ keyword);
         List<NewsResponse> dtos = new ArrayList<>();
-        String[] prompts = request.split(" ");
-
-        int requestCount = 0;
-        int maxTotalRequests = 10; // 예: 최대 10번까지만 API 호출
+        String[] keywords = keyword.split(" ");
+        int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
 
         outer:
-        while (dtos.size() < targetCount && requestCount < maxTotalRequests) {
-            for (String prompt : prompts) {
-                if (requestCount >= maxTotalRequests) break outer;
+        for (String k : keywords) {
+            int collected = 0;
+            int start = 1;
+            int display = 20;
 
-                String response = naverSearchApi(prompt, 100);
-                requestCount++;
+            while (collected < perKeywordSize) {
+                String response = naverSearchApi(k, display, start);
 
                 try {
                     JsonNode root = objectMapper.readTree(response);
                     JsonNode items = root.path("items");
 
-                    if (items.isArray()) {
-                        for (JsonNode item : items) {
-                            String link = item.path("link").asText();
+                    if (!items.isArray() || items.size() == 0) {
+                        // 더 이상 결과가 없음 → 다음 키워드로 넘어감
+                        break;
+                    }
 
-                            // 네이버 뉴스만 허용
-                            if (!link.contains("https://n.news.naver.com") && !link.contains("https://news.naver.com")) {
-                                continue;
-                            }
+                    for (JsonNode item : items) {
+                        String link = item.path("link").asText();
+                        if (!link.contains("https://n.news.naver.com") && !link.contains("https://news.naver.com")) {
+                            continue;
+                        }
+                        if (dtos.stream().anyMatch(dto -> dto.getLink().equals(link))) {
+                            continue;
+                        }
 
-                            // 중복 제거
-                            if (dtos.stream().anyMatch(dto -> dto.getLink().equals(link))) {
-                                continue;
-                            }
+                        String title = Jsoup.parse(item.path("title").asText()).text();
+                        String description = Jsoup.parse(item.path("description").asText()).text();
+                        String thumbnail = getThumbnail(link);
 
-                            String title = Jsoup.parse(item.path("title").asText()).text();
-                            String description = Jsoup.parse(item.path("description").asText()).text();
-                            String thumbnail = getThumbnail(link);
+                        dtos.add(NewsResponse.builder()
+                                .title(title)
+                                .link(link)
+                                .thumbnail(thumbnail)
+                                .description(description)
+                                .build());
 
-                            dtos.add(NewsResponse.builder()
-                                    .title(title)
-                                    .link(link)
-                                    .thumbnail(thumbnail)
-                                    .description(description)
-                                    .build());
-
-                            if (dtos.size() >= targetCount) {
-                                break outer;
-                            }
+                        collected++;
+                        if (collected >= perKeywordSize || dtos.size() >= TOTAL_ITEM_SIZE) {
+                            break;
                         }
                     }
+
+                    // 다음 페이지로 넘어갈 수 있도록 start 증가
+                    start += display;
+
                 } catch (Exception e) {
-                    log.error("[News Service] getResponse");
+                    log.error("[News Service] getResponse", e);
                     throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
                 }
             }
+
+            if (dtos.size() >= TOTAL_ITEM_SIZE) break outer;
         }
+
         return dtos;
     }
 
@@ -229,21 +243,25 @@ public class NewsService {
         }
     }
 
-    public String naverSearchApi(String query, Integer display) {
-        if (display == null) display = 50;
+    public String naverSearchApi(String query, Integer display, Integer start) {
+        if (display == null) display = 10;
+        if (start == null) start = 1;
+        URI uri = UriComponentsBuilder
+                .fromUriString("https://openapi.naver.com")
+                .path("/v1/search/news.json")
+                .queryParam("query", "이재명")
+                .queryParam("display", display)
+                .queryParam("start", start)
+                .queryParam("sort", "date")
+                .encode(Charset.forName("UTF-8"))
+                .build()
+                .toUri();
+
         WebClient webClient = WebClient.builder()
-                .baseUrl("https://openapi.naver.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("X-Naver-Client-Id", CLIENT_ID)
                 .defaultHeader("X-Naver-Client-Secret", CLIENT_SECRET)
                 .build();
-
-        String uri = UriComponentsBuilder.fromPath("/v1/search/news.json")
-                .queryParam("query", query)
-                .queryParam("display", display)
-                .build()
-                .encode()
-                .toUriString();
-
 
         return webClient.get()
                 .uri(uri)
