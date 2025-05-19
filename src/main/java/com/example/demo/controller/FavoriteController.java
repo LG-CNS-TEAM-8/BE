@@ -12,6 +12,7 @@ import com.example.demo.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +30,7 @@ public class FavoriteController {
     }
     
     // 내가 좋아요 누른 뉴스 조회
-    @PostMapping("/{userId}/favorites")
+    @GetMapping("/{userId}/favorites")
     public ResponseEntity<List<FavoriteResponseDto>> getFavorites(@PathVariable Long userId) {
         List<FavoriteResponseDto> list = favoriteService.getMyFavorites(userId);
         return ResponseEntity.ok(list);
