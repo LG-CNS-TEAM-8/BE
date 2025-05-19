@@ -41,7 +41,7 @@ public class NewsController {
     @GetMapping("/news/ai")
     public ResponseEntity<List<NewsResponse>> getPrompt() {
         String prompt = newsService.getKeyword();
-        List<NewsResponse> response = newsService.getResponse(prompt,50);
+        List<NewsResponse> response = newsService.getResponse(prompt);
         return ResponseEntity.ok(response);
     }
 
