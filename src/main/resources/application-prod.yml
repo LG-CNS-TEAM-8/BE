@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: demo
+
+  datasource:
+    url: jdbc:mariadb://${DB_URL}:${DB_PORT}/${DB_NAME}?serverTimezone=UTC&characterEncoding=utf8
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PWD}
+
+  jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  ai:
+    openai:
+      api-key: ${OPEN_AI_API_KEY}
+      chat:
+        options:
+          model: ${AI_MODEL}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+frontend:
+  origin: http://localhost:3000/ # 또는 http://localhost:5173/
+
+naver:
+  client:
+    id: ${NAVER_CLIENT_ID}
+  search:
+    key: ${NAVER_SEARCH_KEY}
