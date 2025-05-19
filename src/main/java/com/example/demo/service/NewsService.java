@@ -4,6 +4,7 @@ import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.News;
 import com.example.demo.dto.response.NewsResponse;
+import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.repository.NewsRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,14 +41,14 @@ public class NewsService {
     private final ObjectMapper objectMapper;
 
     public List<NewsResponse> getNews() {
-        List<News> news = newsRepository.findAll();
-        if (news == null) throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        List<News> newsList = newsRepository.findAll();
+        if (newsList.isEmpty()) throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 
-        return news.stream().map(NewsResponse::from).toList();
+        return newsList.stream().map(NewsResponse::from).toList();
     }
 
 
-    public String getPrompt() {
+    public String getKeyword() {
         List<String> interests = List.of("경제", "IT", "주식", "대선");
         List<News> newsList = newsRepository.findAll();
 
@@ -58,30 +58,28 @@ public class NewsService {
                 .map(news -> news.getTitle() + " (" + news.getCategory() + ")")
                 .collect(Collectors.joining("\n- ", "- ", ""));
 
-        String prompt = """
-                사용자의 관심사는 다음과 같습니다: %s
-                
-                오늘의 뉴스 헤드라인과 카테고리는 다음과 같습니다:
-                %s
-                
-                위 정보를 바탕으로, 다음 조건에 따라 네이버 검색 API에 사용할 적절한 검색어를 5개 추천해주세요:
-                
-                - 검색어는 중복되지 않도록 서로 다른 주제를 다뤄야 합니다.
-                - 각 검색어는 하나의 명사 또는 간결한 단어로 구성해주세요 (예: 'AI', '부동산', '일자리').
-                - 검색어는 사용자의 관심사와 오늘 뉴스 헤드라인에 언급된 키워드를 기반으로 도출해주세요.
-                - 관심사와 관련된 키워드에 우선순위를 두되, 오늘 뉴스와 연관된 키워드도 적절히 반영해주세요.
-                - 추천된 검색어는 공백으로 구분된 5개의 단어로만 출력해주세요 (쉼표 없이).
-                
-                예시 출력: AI 부동산 일자리 스타트업 우크라이나
-                """.formatted(interestStr, titles);
+        return openAiChatModel.call(
+                """
+                        사용자의 관심사는 다음과 같습니다: %s
+                        
+                        오늘의 뉴스 헤드라인과 카테고리는 다음과 같습니다:
+                        %s
+                        
+                        위 정보를 바탕으로, 다음 조건에 따라 네이버 검색 API에 사용할 적절한 검색어를 5개 추천해주세요:
+                        
+                        - 검색어는 중복되지 않도록 서로 다른 주제를 다뤄야 합니다.
+                        - 각 검색어는 하나의 명사 또는 간결한 단어로 구성해주세요 (예: 'AI', '부동산', '일자리').
+                        - 검색어는 사용자의 관심사와 오늘 뉴스 헤드라인에 언급된 키워드를 기반으로 도출해주세요.
+                        - 관심사와 관련된 키워드에 우선순위를 두되, 오늘 뉴스와 연관된 키워드도 적절히 반영해주세요.
+                        - 추천된 검색어는 공백으로 구분된 5개의 단어로만 출력해주세요 (쉼표 없이).
+                        
+                        예시 출력: AI 부동산 일자리 스타트업 우크라이나
+                        """.formatted(interestStr, titles)
 
-
-        String response = openAiChatModel.call(prompt);
-
-        return response;
+        );
     }
 
-    public List<NewsResponse> searchNews(String search) {
+    public List<NewsResponse> getSearchNews(String search) {
         List<NewsResponse> dtos = new ArrayList<>();
         String response = naverSearchApi(search, null);
 
@@ -102,13 +100,14 @@ public class NewsService {
                             .title(title)
                             .link(link)
                             .thumbnail(thumbnail)
-                            .summary(description)
+                            .description(description)
                             .build());
                 }
             } else {
                 log.info("네이버 뉴스 응답 객체 비었음");
             }
         } catch (Exception e) {
+            log.error("[News Service] getSearchNews");
             throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         }
 
@@ -157,7 +156,7 @@ public class NewsService {
                                     .title(title)
                                     .link(link)
                                     .thumbnail(thumbnail)
-                                    .summary(description)
+                                    .description(description)
                                     .build());
 
                             if (dtos.size() >= targetCount) {
@@ -166,6 +165,7 @@ public class NewsService {
                         }
                     }
                 } catch (Exception e) {
+                    log.error("[News Service] getResponse");
                     throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
                 }
             }
@@ -176,7 +176,7 @@ public class NewsService {
 
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
-    public void updateNewsHeadLine() throws IOException {
+    public void updateNewsHeadLine() {
         try {
             LocalDateTime batchTime = LocalDateTime.now();
 
@@ -193,7 +193,7 @@ public class NewsService {
 
             for (NewsSection section : sections) {
                 Document doc = Jsoup.connect(section.url()).get();
-                org.jsoup.select.Elements newsLists = doc.select("ul[id^=_SECTION_HEADLINE_LIST_]");
+                Elements newsLists = doc.select("ul[id^=_SECTION_HEADLINE_LIST_]");
 
                 for (Element newsListElem : newsLists) {
                     Elements items = newsListElem.select("li");
@@ -213,7 +213,7 @@ public class NewsService {
                         newsList.add(News.builder()
                                 .title(title)
                                 .link(link)
-                                .summary(summary)
+                                .description(summary)
                                 .thumbnail(thumbnail)
                                 .category(section.name())
                                 .createdTime(batchTime)
@@ -224,7 +224,8 @@ public class NewsService {
             newsRepository.saveAll(newsList);
             newsRepository.deleteByCreatedTimeBefore(batchTime);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("[News Service] updateNewsHeadLine");
+            throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         }
     }
 
@@ -238,32 +239,69 @@ public class NewsService {
 
         String uri = UriComponentsBuilder.fromPath("/v1/search/news.json")
                 .queryParam("query", query)
-                .queryParam("display", 100)
+                .queryParam("display", display)
                 .build()
                 .encode()
                 .toUriString();
 
 
-        String response = webClient.get()
+        return webClient.get()
                 .uri(uri)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
-
-        return response;
     }
 
-    public String getThumbnail(String path) throws IOException {
-        Document doc = Jsoup.connect(path).get();
-        org.jsoup.select.Elements newsLists = doc.select("div[id^=img_a1]");
-        for (Element news : newsLists) {
-            Element img = news.selectFirst("img");
-            if (img != null) {
-                String imageUrl = img.attr("data-src");
-                return imageUrl;
+    public String getThumbnail(String path) {
+        try {
+            Document doc = Jsoup.connect(path).get();
+            org.jsoup.select.Elements newsLists = doc.select("div[id^=img_a1]");
+            for (Element news : newsLists) {
+                Element img = news.selectFirst("img");
+                if (img != null) {
+                    String imageUrl = img.attr("data-src");
+                    return imageUrl;
+                }
             }
+            return null;
+        } catch (Exception e) {
+            log.error("[News Service] getThumbnail");
+            throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         }
-        return null;
+    }
+
+    public NewsSummaryResponse getSummary(String link) {
+        try {
+            Document doc = Jsoup.connect(link).get();
+            Elements article = doc.select("article[id^=dic_area]");
+
+            if (!article.isEmpty()) {
+                // 불필요한 태그 제거
+                article.select("strong, span, div, em, img, script, style, br").remove();
+
+                // 텍스트 추출 (줄바꿈 없이)
+                String plainText = article.text();
+
+                String response = openAiChatModel.call("""
+                        아래는 뉴스 기사 본문입니다:
+                        ---
+                        %s
+                        ---
+                        
+                        이 기사를 한국어로 요약해 주세요.
+                        - **300자 내외**로, 가능한 한 **정보를 풍부하게** 담아 주세요.
+                        - **핵심 인물, 사건, 발언, 맥락**을 모두 포함해 주세요.
+                        - 뉴스 요약문처럼 **간결하지만 상세하게** 정리해 주세요.
+                        """.formatted(plainText));
+
+                return NewsSummaryResponse.builder()
+                        .summary(response)
+                        .build();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("[News Service] getSummary");
+            throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
+        }
     }
 }
-
