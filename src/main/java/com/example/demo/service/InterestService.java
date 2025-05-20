@@ -1,5 +1,8 @@
 package com.example.demo.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +12,7 @@ import com.example.demo.domain.Interest;
 import com.example.demo.domain.User;
 import com.example.demo.domain.UserInterest;
 import com.example.demo.dto.request.InterestRequestDto;
+import com.example.demo.dto.response.InterestResponseDto;
 import com.example.demo.repository.InterestRepository;
 import com.example.demo.repository.UserInterestRepository;
 import com.example.demo.repository.UserRepository;
@@ -55,6 +59,18 @@ public class InterestService {
         }
             
         userInterestRepository.deleteByUserAndInterest(user, interest);;
+    }
+    
+
+    @Transactional(readOnly = true)
+    public List<InterestResponseDto> getInterests(Long userId){
+        User user = userRepository.findById(userId)
+            .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        return userInterestRepository.findByUserId(userId).stream()
+            .map(UserInterest::getInterest)
+            .map(InterestResponseDto::from)
+            .collect(Collectors.toList());
     }
     
 }
