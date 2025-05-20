@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Getter
 @AllArgsConstructor
@@ -20,14 +22,14 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(NOT_FOUND, "사용자를 찾을 수 없습니다.", "40401"),
     FAVORITE_NOT_FOUND(NOT_FOUND, "좋아요를 찾을 수 없습니다.", "40402"),
+
     DUPLICATE_INTEREST(CONFLICT, "이미 존재하는 관심사입니다.", "409"),
 
     NO_INTEREST_SELECTED(BAD_REQUEST,"관심사를 하나도 선택하지 않았습니다.","40001"),
     INTEREST_NOT_FOUND(NOT_FOUND,"관심사를 찾을 수 없습니다.","40403"),
     INTEREST_NOT_FOUND_FOR_USER(NOT_FOUND,"사용자에게 등록된 관심사가 없습니다.","40404"),
 
-    INVALID_PASSWORD(BAD_REQUEST, "올바르지 못한 비밀번호 입니다.", "400")
-    ;
+    INVALID_PASSWORD(BAD_REQUEST,"올바르지 못한 비밀번호입니다." , "400");
 
     private final HttpStatus status;
     private final String message;
@@ -46,7 +48,6 @@ public enum ErrorCode {
         return new CustomException(NEWS_PARSING_ERROR);
     }
 
-
     public static CustomException userNotFound() {
         return new CustomException(USER_NOT_FOUND);
     }
@@ -56,5 +57,15 @@ public enum ErrorCode {
     public static CustomException duplicateInterest() {
         return new CustomException(DUPLICATE_INTEREST);
     }
-}
 
+    public static CustomException noInterestSelected(){
+        return new CustomException(NO_INTEREST_SELECTED);
+    }
+    public static CustomException interestNotFound(){
+        return new CustomException(INTEREST_NOT_FOUND);
+    }
+    public static CustomException interestNotFoundForUser(){
+        return new CustomException(INTEREST_NOT_FOUND_FOR_USER);
+    }
+
+}
