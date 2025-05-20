@@ -49,6 +49,7 @@ public class AuthService {
     public void deleteRefreshToken(String token){
         RefreshToken refreshToken = refreshTokenService.findByRefreshToken(token)
                 .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+        refreshTokenService.deleteRefreshToken(refreshToken);
     }
 
     public CreateNewAccessTokenResponse createNewAccessToken(String refreshToken){
