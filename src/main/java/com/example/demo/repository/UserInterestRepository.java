@@ -13,5 +13,6 @@ public interface UserInterestRepository extends JpaRepository<UserInterest, User
     List<UserInterest> findByUserId(Long userId);
 
     boolean existsByUserAndInterest(User user, Interest interest);
+    void deleteByUserAndInterest(User user, Interest interest);
     
 }

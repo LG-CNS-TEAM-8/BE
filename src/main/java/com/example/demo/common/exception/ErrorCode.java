@@ -28,8 +28,9 @@ public enum ErrorCode {
     NO_INTEREST_SELECTED(BAD_REQUEST,"관심사를 하나도 선택하지 않았습니다.","40001"),
     INTEREST_NOT_FOUND(NOT_FOUND,"관심사를 찾을 수 없습니다.","40403"),
     INTEREST_NOT_FOUND_FOR_USER(NOT_FOUND,"사용자에게 등록된 관심사가 없습니다.","40404"),
+    INVALID_PASSWORD(BAD_REQUEST,"올바르지 못한 비밀번호입니다." , "400")
+    ;
 
-    INVALID_PASSWORD(BAD_REQUEST,"올바르지 못한 비밀번호입니다." , "400");
 
     private final HttpStatus status;
     private final String message;
@@ -57,7 +58,6 @@ public enum ErrorCode {
     public static CustomException duplicateInterest() {
         return new CustomException(DUPLICATE_INTEREST);
     }
-
     public static CustomException noInterestSelected(){
         return new CustomException(NO_INTEREST_SELECTED);
     }

@@ -41,5 +41,20 @@ public class InterestService {
             
         userInterestRepository.save(mapping);
     }
+
+    @Transactional
+    public void removeInterest(InterestRequestDto dto){
+        User user = userRepository.findById(dto.getUserId())
+            .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        Interest interest = interestRepository.findByName(dto.getName())
+            .orElseThrow(()->new CustomException((ErrorCode.INTEREST_NOT_FOUND)));
+        
+        if(!userInterestRepository.existsByUserAndInterest(user,interest)){
+            throw new CustomException(ErrorCode.INTEREST_NOT_FOUND_FOR_USER);
+        }
+            
+        userInterestRepository.deleteByUserAndInterest(user, interest);;
+    }
     
 }
