@@ -51,9 +51,9 @@ public class NewsService {
     private final ObjectMapper objectMapper;
     private final FavoriteRepository favoriteRepository;
 
-    public List<NewsResponse> getNews() {
+    public List<NewsResponse> getNews(Long userId) {
         List<News> newsList = newsRepository.findAll();
-        List<String> favorites = getUserFavorite(null);
+        List<String> favorites = getUserFavorite(userId);
         if (newsList.isEmpty()) throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 
         return newsList.stream()
@@ -103,10 +103,10 @@ public class NewsService {
         );
     }
 
-    public List<NewsResponse> getSearchNews(String search) {
+    public List<NewsResponse> getSearchNews(String search,Long userId) {
         List<NewsResponse> dtos = new ArrayList<>();
         String response = naverSearchApi(search, null, null);
-        List<String> favorites = getUserFavorite(null);
+        List<String> favorites = getUserFavorite(userId);
 
         try {
             JsonNode root = objectMapper.readTree(response);
@@ -141,12 +141,12 @@ public class NewsService {
         return dtos;
     }
 
-    public List<NewsResponse> getResponse(String keyword, Integer start) {
+    public List<NewsResponse> getResponse(String keyword, Integer start, Long userId) {
         System.out.println("keyword : " + keyword);
         List<NewsResponse> dtos = new ArrayList<>();
         String[] keywords = keyword.split(" ");
         int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
-        List<String> favorites = getUserFavorite(null);
+        List<String> favorites = getUserFavorite(userId);
         outer:
         for (String k : keywords) {
             int collected = 0;
