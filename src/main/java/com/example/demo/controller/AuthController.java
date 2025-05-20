@@ -5,6 +5,7 @@ import com.example.demo.dto.request.UserLoginRequest;
 import com.example.demo.dto.request.UserSignUpRequest;
 import com.example.demo.dto.response.CreateNewAccessTokenResponse;
 import com.example.demo.dto.response.UserLoginResponse;
+import com.example.demo.dto.response.UserSignUpResponse;
 import com.example.demo.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-
     private final AuthService authService;
 
     @PostMapping("/login")
@@ -25,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<String> signUp(@RequestBody UserSignUpRequest body){
+    public ResponseEntity<UserSignUpResponse> signUp(@RequestBody UserSignUpRequest body){
         User user = User.builder()
                 .email(body.getEmail())
                 .name(body.getName())
@@ -39,8 +39,9 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.createNewAccessToken(refreshToken));
     }
 
-    @GetMapping("/test")
-    public String test(){
-        return "test";
+    @DeleteMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader(value = "refreshToken") String refreshToken){
+        authService.deleteRefreshToken(refreshToken);
+        return ResponseEntity.ok("Logout Successful");
     }
 }

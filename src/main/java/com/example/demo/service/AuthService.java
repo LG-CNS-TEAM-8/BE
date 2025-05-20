@@ -1,8 +1,12 @@
 package com.example.demo.service;
 
+import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.exception.ErrorCode;
+import com.example.demo.domain.RefreshToken;
 import com.example.demo.domain.User;
 import com.example.demo.dto.response.CreateNewAccessTokenResponse;
 import com.example.demo.dto.response.UserLoginResponse;
+import com.example.demo.dto.response.UserSignUpResponse;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +22,8 @@ public class AuthService {
 
     @Transactional
     public UserLoginResponse login(String email, String password){
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Invalid email"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email"));
         if(!user.getPassword().equals(password))
             throw new IllegalArgumentException("Invalid password");
 
@@ -31,9 +36,20 @@ public class AuthService {
     }
 
     @Transactional
-    public String signUp(User user){
-        userRepository.save(user);
-        return "Signup Successful";
+    public UserSignUpResponse signUp(User user){
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+        return new UserSignUpResponse(user.getId());
+    }
+
+    @Transactional
+    public void deleteRefreshToken(String token){
+        RefreshToken refreshToken = refreshTokenService.findByRefreshToken(token)
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+        refreshTokenService.deleteRefreshToken(refreshToken);
     }
 
     public CreateNewAccessTokenResponse createNewAccessToken(String refreshToken){
