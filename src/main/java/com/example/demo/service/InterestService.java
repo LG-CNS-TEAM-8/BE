@@ -43,7 +43,7 @@ public class InterestService {
     }
 
     @Transactional
-    public void deleteInterest(InterestRequestDto dto){
+    public void removeInterest(InterestRequestDto dto){
         User user = userRepository.findById(dto.getUserId())
             .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
         

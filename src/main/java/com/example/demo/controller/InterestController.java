@@ -9,6 +9,7 @@ import com.example.demo.service.InterestService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -25,10 +26,11 @@ public class InterestController {
     }
 
     // 관심사 삭제
-    @DeleteMapping("/interest/delete/{userId}/{interestId}")
+    @DeleteMapping("/interest/delete/{userId}")
     public ResponseEntity<Void> removeInterest(
+            @PathVariable Long userId,
             @RequestBody InterestRequestDto dto) {
-        interestService.deleteInterest(dto);
+        interestService.removeInterest(dto);
         return ResponseEntity.noContent().build();
     }
 }
