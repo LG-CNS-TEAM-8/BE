@@ -23,6 +23,6 @@ public class UserController {
 
     @DeleteMapping("/user")
     public ResponseEntity<String> deleteUser(@AuthenticationPrincipal PrincipalDetails principalDetails){
-        return ResponseEntity.ok(userService.deleteUser(principalDetails.getUsername()));
+        return ResponseEntity.ok(userService.deleteUser(principalDetails.getId()));
     }
 }
