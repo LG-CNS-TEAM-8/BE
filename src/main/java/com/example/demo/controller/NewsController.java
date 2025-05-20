@@ -62,7 +62,7 @@ public class NewsController {
      * 뉴스 헤드라인 수동 업데이트
      * @return
      */
-    @GetMapping("/news/update")
+    @GetMapping("/update")
     public ResponseEntity<String> newUpdate(){
         newsService.updateNewsHeadLine();
         return ResponseEntity.ok("updated!!");
