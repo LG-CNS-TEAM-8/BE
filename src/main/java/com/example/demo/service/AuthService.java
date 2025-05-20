@@ -18,7 +18,8 @@ public class AuthService {
 
     @Transactional
     public UserLoginResponse login(String email, String password){
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Invalid email"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email"));
         if(!user.getPassword().equals(password))
             throw new IllegalArgumentException("Invalid password");
 
@@ -31,9 +32,13 @@ public class AuthService {
     }
 
     @Transactional
-    public String signUp(User user){
-        userRepository.save(user);
-        return "Signup Successful";
+    public UserSignUpResponse signUp(User user){
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+        return new UserSignUpResponse(user.getId());
     }
 
     @Transactional
