@@ -41,6 +41,7 @@ public class InterestController {
     public ResponseEntity<Void> removeInterest(
             @PathVariable Long userId,
             @RequestBody InterestRequestDto dto) {
+        dto.setUserId(userId);
         interestService.removeInterest(dto);
         return ResponseEntity.noContent().build();
     }
