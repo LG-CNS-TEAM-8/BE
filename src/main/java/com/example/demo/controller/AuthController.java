@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.domain.User;
 import com.example.demo.dto.request.UserLoginRequest;
 import com.example.demo.dto.request.UserSignUpRequest;
+import com.example.demo.dto.response.CheckEmailResponse;
 import com.example.demo.dto.response.CreateNewAccessTokenResponse;
 import com.example.demo.dto.response.UserLoginResponse;
 import com.example.demo.dto.response.UserSignUpResponse;
@@ -32,6 +33,11 @@ public class AuthController {
                 .password(body.getPassword())
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(user));
+    }
+
+    @GetMapping("/email")
+    public ResponseEntity<CheckEmailResponse> checkEmail(@RequestBody String email){
+        return ResponseEntity.ok(authService.isEmailExist(email));
     }
 
     @PostMapping("/token")

@@ -1,6 +1,7 @@
 package com.example.demo.config;
 
 import com.example.demo.security.jwt.CustomExceptionHandlerFilter;
+import com.example.demo.security.jwt.JwtAuthenticationEntryPoint;
 import com.example.demo.security.jwt.JwtFilter;
 import com.example.demo.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,13 @@ import org.springframework.web.cors.CorsConfiguration;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .addFilterBefore(new CustomExceptionHandlerFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+//                .addFilterBefore(new CustomExceptionHandlerFilter(), JwtFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors((corsCustomizer -> {
@@ -40,9 +42,10 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers("/login","/sign-up","/swagger-ui/**","/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated());
-
+                        .requestMatchers("/login","/sign-up","/swagger-ui/**","/v3/api-docs/**", "/error").permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(handler ->
+                        handler.authenticationEntryPoint(jwtAuthenticationEntryPoint));
         return http.build();
     }
 }
