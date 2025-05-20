@@ -14,6 +14,7 @@ public class NewsResponse {
     private String link;
     private String thumbnail;
     private String category;
+    private boolean favorite;
 
     public static NewsResponse from(News news) {
         return NewsResponse.builder()

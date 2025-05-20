@@ -31,7 +31,7 @@ public class NewsController {
      * @param keyword
      * @return List<NewsResponseDto>
      */
-    @GetMapping("/news/{keyword}")
+    @GetMapping("/news/search/{keyword}")
     public ResponseEntity<List<NewsResponse>> searchNews(@PathVariable String keyword) {
         List<NewsResponse> newsList = newsService.getSearchNews(keyword);
         return ResponseEntity.ok(newsList);
@@ -51,20 +51,10 @@ public class NewsController {
      * AI 본문 요약 API
      * @return
      */
-    @GetMapping("/news/summary")
+    @PostMapping("/news/summary")
     public ResponseEntity<NewsSummaryResponse> getSummary(@RequestBody NewsSummaryRequest request){
         NewsSummaryResponse response = newsService.getSummary(request.getLink());
         if(response == null) throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 뉴스 헤드라인 수동 업데이트
-     * @return
-     */
-    @GetMapping("/update")
-    public ResponseEntity<String> newUpdate(){
-        newsService.updateNewsHeadLine();
-        return ResponseEntity.ok("updated!!");
     }
 }
