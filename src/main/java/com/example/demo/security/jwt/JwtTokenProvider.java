@@ -1,5 +1,7 @@
 package com.example.demo.security.jwt;
 
+import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.security.PrincipalDetails;
 import com.example.demo.security.PrincipalDetailsService;
 import io.jsonwebtoken.Claims;
@@ -65,7 +67,7 @@ public class JwtTokenProvider {
             return new UsernamePasswordAuthenticationToken(principalDetails,
                     "", principalDetails.getAuthorities());
         } catch (UsernameNotFoundException exception) {
-            throw new RuntimeException("User not found");
+            throw new CustomException(ErrorCode.UNAUTHORIZED_USER);
         }
     }
 

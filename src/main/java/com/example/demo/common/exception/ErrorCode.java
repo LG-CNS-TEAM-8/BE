@@ -21,7 +21,9 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(NOT_FOUND, "사용자를 찾을 수 없습니다.", "40401"),
     FAVORITE_NOT_FOUND(NOT_FOUND, "좋아요를 찾을 수 없습니다.", "40402"),
-    DUPLICATE_INTEREST(CONFLICT, "이미 존재하는 관심사입니다.", "409")
+    DUPLICATE_INTEREST(CONFLICT, "이미 존재하는 관심사입니다.", "409"),
+
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "올바르지 못한 비밀번호 입니다.", "400")
     ;
 
     private final HttpStatus status;

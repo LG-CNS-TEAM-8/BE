@@ -4,6 +4,7 @@ import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.RefreshToken;
 import com.example.demo.domain.User;
+import com.example.demo.dto.response.CheckEmailResponse;
 import com.example.demo.dto.response.CreateNewAccessTokenResponse;
 import com.example.demo.dto.response.UserLoginResponse;
 import com.example.demo.dto.response.UserSignUpResponse;
@@ -23,9 +24,9 @@ public class AuthService {
     @Transactional
     public UserLoginResponse login(String email, String password){
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email"));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         if(!user.getPassword().equals(password))
-            throw new IllegalArgumentException("Invalid password");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
         refreshTokenService.saveRefreshToken(refreshToken, user.getId());
