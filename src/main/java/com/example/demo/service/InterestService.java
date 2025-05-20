@@ -31,19 +31,21 @@ public class InterestService {
         User user = userRepository.findById(dto.getUserId())
             .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        Interest interest = interestRepository.findByName(dto.getName())
-                .orElseGet(() -> interestRepository.save(Interest.builder().name(dto.getName()).build()));
+        for (String name:dto.getName()){
+            Interest interest = interestRepository.findByName(name)
+                .orElseGet(()->interestRepository.save(
+                    Interest.builder().name(name).build()
+                ));
+            if(userInterestRepository.existsByUserAndInterest(user, interest)){
+                throw new CustomException(ErrorCode.DUPLICATE_INTEREST);
+            }
 
-        if(userInterestRepository.existsByUserAndInterest(user,interest)){
-            throw new CustomException(ErrorCode.DUPLICATE_INTEREST);
+            UserInterest mapping = UserInterest.builder()
+                .user(user)
+                .interest(interest)
+                .build();
+            userInterestRepository.save(mapping);
         }
-        
-        UserInterest mapping = UserInterest.builder()
-            .user(user)
-            .interest(interest)
-            .build();
-            
-        userInterestRepository.save(mapping);
     }
 
     @Transactional
@@ -51,14 +53,14 @@ public class InterestService {
         User user = userRepository.findById(dto.getUserId())
             .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        Interest interest = interestRepository.findByName(dto.getName())
-            .orElseThrow(()->new CustomException((ErrorCode.INTEREST_NOT_FOUND)));
-        
-        if(!userInterestRepository.existsByUserAndInterest(user,interest)){
-            throw new CustomException(ErrorCode.INTEREST_NOT_FOUND_FOR_USER);
+        for(String name:dto.getName()){
+            Interest interest = interestRepository.findByName(name)
+                .orElseThrow(()->new CustomException(ErrorCode.INTEREST_NOT_FOUND));
+            if(!userInterestRepository.existsByUserAndInterest(user, interest)){
+                throw new CustomException(ErrorCode.INTEREST_NOT_FOUND_FOR_USER);
+            }
+            userInterestRepository.deleteByUserAndInterest(user, interest);
         }
-            
-        userInterestRepository.deleteByUserAndInterest(user, interest);;
     }
     
 
