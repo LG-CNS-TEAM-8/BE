@@ -26,8 +26,8 @@ public class UserService {
     }
 
     @Transactional
-    public String deleteUser(String email) {
-        User user = userRepository.findByEmail(email)
+    public String deleteUser(Long id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
         return "User Deleted";

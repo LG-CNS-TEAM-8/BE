@@ -1,5 +1,7 @@
 package com.example.demo.security;
 
+import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.User;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,7 @@ public class PrincipalDetailsService implements UserDetailsService {
     @Override
     public PrincipalDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User userEntity = userRepository.findById(Long.valueOf(username))
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         return new PrincipalDetails(userEntity);
     }
 }
