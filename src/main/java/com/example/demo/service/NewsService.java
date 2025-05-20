@@ -2,9 +2,11 @@ package com.example.demo.service;
 
 import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
+import com.example.demo.domain.Favorite;
 import com.example.demo.domain.News;
 import com.example.demo.dto.response.NewsResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
+import com.example.demo.repository.FavoriteRepository;
 import com.example.demo.repository.NewsRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,12 +49,26 @@ public class NewsService {
     private final NewsRepository newsRepository;
     private final OpenAiChatModel openAiChatModel;
     private final ObjectMapper objectMapper;
+    private final FavoriteRepository favoriteRepository;
 
     public List<NewsResponse> getNews() {
         List<News> newsList = newsRepository.findAll();
+        List<String> favorites = getUserFavorite(null);
         if (newsList.isEmpty()) throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 
-        return newsList.stream().map(NewsResponse::from).toList();
+        return newsList.stream()
+                .map(news -> {
+                    boolean isFavorite = favorites != null && favorites.contains(news.getLink());
+                    return NewsResponse.builder()
+                            .title(news.getTitle())
+                            .link(news.getLink())
+                            .thumbnail(news.getThumbnail())
+                            .description(news.getDescription())
+                            .category(news.getCategory())
+                            .favorite(isFavorite)
+                            .build();
+                })
+                .toList();
     }
 
     @Transactional
@@ -90,6 +106,7 @@ public class NewsService {
     public List<NewsResponse> getSearchNews(String search) {
         List<NewsResponse> dtos = new ArrayList<>();
         String response = naverSearchApi(search, null, null);
+        List<String> favorites = getUserFavorite(null);
 
         try {
             JsonNode root = objectMapper.readTree(response);
@@ -104,10 +121,12 @@ public class NewsService {
                     String title = Jsoup.parse(item.path("title").asText()).text();
                     String description = Jsoup.parse(item.path("description").asText()).text();
                     String thumbnail = getThumbnail(link);
+                    boolean isFavorite = favorites != null && favorites.contains(link);
                     dtos.add(NewsResponse.builder()
                             .title(title)
                             .link(link)
                             .thumbnail(thumbnail)
+                            .favorite(isFavorite)
                             .description(description)
                             .build());
                 }
@@ -123,15 +142,15 @@ public class NewsService {
     }
 
     public List<NewsResponse> getResponse(String keyword, Integer start) {
-        System.out.println("keyword : "+ keyword);
+        System.out.println("keyword : " + keyword);
         List<NewsResponse> dtos = new ArrayList<>();
         String[] keywords = keyword.split(" ");
         int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
-
+        List<String> favorites = getUserFavorite(null);
         outer:
         for (String k : keywords) {
             int collected = 0;
-            start = (start == null)? 1: start;
+            start = (start == null) ? 1 : start;
             int display = 20;
 
             while (collected < perKeywordSize) {
@@ -158,12 +177,13 @@ public class NewsService {
                         String title = Jsoup.parse(item.path("title").asText()).text();
                         String description = Jsoup.parse(item.path("description").asText()).text();
                         String thumbnail = getThumbnail(link);
-
+                        boolean isFavorite = favorites != null && favorites.contains(link);
                         dtos.add(NewsResponse.builder()
                                 .title(title)
                                 .link(link)
                                 .thumbnail(thumbnail)
                                 .description(description)
+                                .favorite(isFavorite)
                                 .build());
 
                         collected++;
@@ -193,7 +213,7 @@ public class NewsService {
     public void updateNewsHeadLine() {
         try {
             LocalDateTime batchTime = LocalDateTime.now();
-            log.info("[News Headline Batch Start]  time : {} ",batchTime);
+            log.info("[News Headline Batch Start]  time : {} ", batchTime);
             List<NewsSection> sections = List.of(
                     new NewsSection("https://news.naver.com/section/100", "정치"),
                     new NewsSection("https://news.naver.com/section/101", "경제"),
@@ -250,7 +270,7 @@ public class NewsService {
         URI uri = UriComponentsBuilder
                 .fromUriString("https://openapi.naver.com")
                 .path("/v1/search/news.json")
-                .queryParam("query", "이재명")
+                .queryParam("query", query)
                 .queryParam("display", display)
                 .queryParam("start", start)
                 .queryParam("sort", "date")
@@ -322,5 +342,14 @@ public class NewsService {
             log.error("[News Service] getSummary");
             throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         }
+    }
+
+    @Transactional
+    public List<String> getUserFavorite(Long userId) {
+        List<Favorite> list = favoriteRepository.findByUserId(userId);
+        if (list.isEmpty()) return null;
+        return list.stream()
+                .map(Favorite::getNewsLink)
+                .collect(Collectors.toList());
     }
 }
