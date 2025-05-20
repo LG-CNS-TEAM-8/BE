@@ -24,9 +24,10 @@ public class FavoriteController {
 
     // 좋아요 등록
     @PostMapping("/favorite")
-    public ResponseEntity<FavoriteResponseDto> likeNews(@RequestBody FavoriteRequestDto dto) {
-        FavoriteResponseDto response = favoriteService.likeNews(dto);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> likeNews(@RequestBody FavoriteRequestDto dto) {
+        return favoriteService.likeNews(dto)
+            .<ResponseEntity<?>>map(ResponseEntity::ok)
+            .orElseGet(()-> ResponseEntity.noContent().build());
     }
     
     // 내가 좋아요 누른 뉴스 조회
