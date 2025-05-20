@@ -20,8 +20,8 @@ public class News {
     @Column(name="title")
     private String title;
 
-    @Column(name="summary")
-    private String summary;
+    @Column(name="description")
+    private String description;
 
     @Column(name="link")
     private String link;
