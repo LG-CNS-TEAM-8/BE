@@ -1,12 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.request.NewsSummaryRequest;
 import com.example.demo.dto.response.NewsResponse;
+import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.service.NewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,17 +31,27 @@ public class NewsController {
      */
     @GetMapping("/news/{keyword}")
     public ResponseEntity<List<NewsResponse>> searchNews(@PathVariable String keyword) {
-        List<NewsResponse> newsList = newsService.searchNews(keyword);
+        List<NewsResponse> newsList = newsService.getSearchNews(keyword);
         return ResponseEntity.ok(newsList);
     }
 
     /***
-     *
+     * AI 추천기사 API
      */
-    @GetMapping("/ai")
+    @GetMapping("/news/ai")
     public ResponseEntity<List<NewsResponse>> getPrompt() {
-        String prompt = newsService.getPrompt();
-        List<NewsResponse> response = newsService.getResponse(prompt,50);
+        String prompt = newsService.getKeyword();
+        List<NewsResponse> response = newsService.getResponse(prompt);
+        return ResponseEntity.ok(response);
+    }
+
+    /***
+     * AI 본문 요약 API
+     * @return
+     */
+    @GetMapping("/news/summary")
+    public ResponseEntity<NewsSummaryResponse> getSummary(@RequestBody NewsSummaryRequest request){
+        NewsSummaryResponse response = newsService.getSummary(request.getLink());
         return ResponseEntity.ok(response);
     }
 }

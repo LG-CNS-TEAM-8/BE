@@ -34,4 +34,9 @@ public class RefreshTokenService {
     public Optional<RefreshToken> findByUserId(Long userId){
         return refreshTokenRepository.findByUserId(userId);
     }
+
+    @Transactional
+    public void deleteRefreshToken(RefreshToken refreshToken){
+        refreshTokenRepository.delete(refreshToken);
+    }
 }
