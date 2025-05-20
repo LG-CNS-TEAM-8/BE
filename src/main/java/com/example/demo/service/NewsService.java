@@ -55,7 +55,7 @@ public class NewsService {
         return newsList.stream().map(NewsResponse::from).toList();
     }
 
-
+    @Transactional
     public String getKeyword() {
         List<String> interests = List.of("경제", "IT", "주식", "대선");
         List<News> newsList = newsRepository.findAll();
@@ -122,7 +122,7 @@ public class NewsService {
         return dtos;
     }
 
-    public List<NewsResponse> getResponse(String keyword) {
+    public List<NewsResponse> getResponse(String keyword, Integer start) {
         System.out.println("keyword : "+ keyword);
         List<NewsResponse> dtos = new ArrayList<>();
         String[] keywords = keyword.split(" ");
@@ -131,7 +131,7 @@ public class NewsService {
         outer:
         for (String k : keywords) {
             int collected = 0;
-            int start = 1;
+            start = (start == null)? 1: start;
             int display = 20;
 
             while (collected < perKeywordSize) {
@@ -193,7 +193,7 @@ public class NewsService {
     public void updateNewsHeadLine() {
         try {
             LocalDateTime batchTime = LocalDateTime.now();
-
+            log.info("[News Headline Batch Start]  time : {} ",batchTime);
             List<NewsSection> sections = List.of(
                     new NewsSection("https://news.naver.com/section/100", "정치"),
                     new NewsSection("https://news.naver.com/section/101", "경제"),
@@ -237,6 +237,7 @@ public class NewsService {
             }
             newsRepository.saveAll(newsList);
             newsRepository.deleteByCreatedTimeBefore(batchTime);
+            log.info("[News Headline Batch End]");
         } catch (Exception e) {
             log.error("[News Service] updateNewsHeadLine");
             throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);

@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.dto.request.NewsSummaryRequest;
 import com.example.demo.dto.response.NewsResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
@@ -38,10 +40,10 @@ public class NewsController {
     /***
      * AI 추천기사 API
      */
-    @GetMapping("/news/ai")
-    public ResponseEntity<List<NewsResponse>> getPrompt() {
+    @GetMapping({"/news/ai", "/news/ai/{start}"})
+    public ResponseEntity<List<NewsResponse>> getPrompt(@PathVariable(required = false) Integer start) {
         String prompt = newsService.getKeyword();
-        List<NewsResponse> response = newsService.getResponse(prompt);
+        List<NewsResponse> response = newsService.getResponse(prompt, start);
         return ResponseEntity.ok(response);
     }
 
@@ -52,6 +54,17 @@ public class NewsController {
     @GetMapping("/news/summary")
     public ResponseEntity<NewsSummaryResponse> getSummary(@RequestBody NewsSummaryRequest request){
         NewsSummaryResponse response = newsService.getSummary(request.getLink());
+        if(response == null) throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 뉴스 헤드라인 수동 업데이트
+     * @return
+     */
+    @GetMapping("/news/update")
+    public ResponseEntity<String> newUpdate(){
+        newsService.updateNewsHeadLine();
+        return ResponseEntity.ok("updated!!");
     }
 }
