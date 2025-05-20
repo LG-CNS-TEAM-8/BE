@@ -3,6 +3,8 @@ package com.example.demo.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.Interest;
 import com.example.demo.domain.User;
 import com.example.demo.domain.UserInterest;
@@ -22,11 +24,16 @@ public class InterestService {
 
     @Transactional
     public void addInterest(InterestRequestDto dto) {
-        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+        User user = userRepository.findById(dto.getUserId())
+            .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
         
         Interest interest = interestRepository.findByName(dto.getName())
                 .orElseGet(() -> interestRepository.save(Interest.builder().name(dto.getName()).build()));
 
+        if(userInterestRepository.existsByUserAndInterest(user,interest)){
+            throw new CustomException(ErrorCode.DUPLICATE_INTEREST);
+        }
+        
         UserInterest mapping = UserInterest.builder()
             .user(user)
             .interest(interest)
