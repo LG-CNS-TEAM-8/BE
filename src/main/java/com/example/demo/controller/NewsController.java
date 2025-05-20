@@ -5,9 +5,11 @@ import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.dto.request.NewsSummaryRequest;
 import com.example.demo.dto.response.NewsResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
+import com.example.demo.security.PrincipalDetails;
 import com.example.demo.service.NewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +23,8 @@ public class NewsController {
      * @return List<NewsResponseDto>
      */
     @GetMapping("/news")
-    public ResponseEntity<List<NewsResponse>> getNews() {
-        List<NewsResponse> newsList = newsService.getNews();
+    public ResponseEntity<List<NewsResponse>> getNews(@AuthenticationPrincipal PrincipalDetails principal) {
+        List<NewsResponse> newsList = newsService.getNews(principal.getId());
         return ResponseEntity.ok(newsList);
     }
 
@@ -32,8 +34,9 @@ public class NewsController {
      * @return List<NewsResponseDto>
      */
     @GetMapping("/news/search/{keyword}")
-    public ResponseEntity<List<NewsResponse>> searchNews(@PathVariable String keyword) {
-        List<NewsResponse> newsList = newsService.getSearchNews(keyword);
+    public ResponseEntity<List<NewsResponse>> searchNews(@PathVariable String keyword,
+                                                         @AuthenticationPrincipal PrincipalDetails principal) {
+        List<NewsResponse> newsList = newsService.getSearchNews(keyword,principal.getId());
         return ResponseEntity.ok(newsList);
     }
 
@@ -41,9 +44,10 @@ public class NewsController {
      * AI 추천기사 API
      */
     @GetMapping({"/news/ai", "/news/ai/{start}"})
-    public ResponseEntity<List<NewsResponse>> getPrompt(@PathVariable(required = false) Integer start) {
+    public ResponseEntity<List<NewsResponse>> getPrompt(@PathVariable(required = false) Integer start,
+                                                        @AuthenticationPrincipal PrincipalDetails principal) {
         String prompt = newsService.getKeyword();
-        List<NewsResponse> response = newsService.getResponse(prompt, start);
+        List<NewsResponse> response = newsService.getResponse(prompt, start,principal.getId());
         return ResponseEntity.ok(response);
     }
 
