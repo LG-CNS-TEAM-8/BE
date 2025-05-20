@@ -34,6 +34,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(user));
     }
 
+    @GetMapping("/email")
+    public ResponseEntity<CheckEmailResponse> checkEmail(@RequestBody String email){
+        return ResponseEntity.ok(authService.isEmailExist(email));
+    }
+
     @PostMapping("/token")
     public ResponseEntity<CreateNewAccessTokenResponse> createNewAccessToken(@RequestHeader(value = "refreshToken") String refreshToken){
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.createNewAccessToken(refreshToken));

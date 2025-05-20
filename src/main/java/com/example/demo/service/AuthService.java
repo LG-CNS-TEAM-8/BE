@@ -46,6 +46,11 @@ public class AuthService {
     }
 
     @Transactional
+    public CheckEmailResponse isEmailExist(String email){
+        return new CheckEmailResponse(userRepository.existsByEmail(email));
+    }
+
+    @Transactional
     public void deleteRefreshToken(String token){
         RefreshToken refreshToken = refreshTokenService.findByRefreshToken(token)
                 .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
