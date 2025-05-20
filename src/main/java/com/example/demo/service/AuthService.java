@@ -36,6 +36,12 @@ public class AuthService {
         return "Signup Successful";
     }
 
+    @Transactional
+    public void deleteRefreshToken(String token){
+        RefreshToken refreshToken = refreshTokenService.findByRefreshToken(token)
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+    }
+
     public CreateNewAccessTokenResponse createNewAccessToken(String refreshToken){
         if(!jwtTokenProvider.validateToken(refreshToken)){
             throw new IllegalArgumentException("Invalid refresh token");
