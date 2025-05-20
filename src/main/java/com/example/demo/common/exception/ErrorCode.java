@@ -5,8 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @Getter
 @AllArgsConstructor
@@ -23,7 +22,11 @@ public enum ErrorCode {
     FAVORITE_NOT_FOUND(NOT_FOUND, "좋아요를 찾을 수 없습니다.", "40402"),
     DUPLICATE_INTEREST(CONFLICT, "이미 존재하는 관심사입니다.", "409"),
 
-    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "올바르지 못한 비밀번호 입니다.", "400")
+    NO_INTEREST_SELECTED(BAD_REQUEST,"관심사를 하나도 선택하지 않았습니다.","40001"),
+    INTEREST_NOT_FOUND(NOT_FOUND,"관심사를 찾을 수 없습니다.","40403"),
+    INTEREST_NOT_FOUND_FOR_USER(NOT_FOUND,"사용자에게 등록된 관심사가 없습니다.","40404"),
+
+    INVALID_PASSWORD(BAD_REQUEST, "올바르지 못한 비밀번호 입니다.", "400")
     ;
 
     private final HttpStatus status;
