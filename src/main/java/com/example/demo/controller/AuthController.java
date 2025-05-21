@@ -33,7 +33,7 @@ public class AuthController {
     }
 
     @Operation(summary = "이메일 중복 확인", description = "이메일이 이미 존재하는지 확인합니다.")
-    @GetMapping("/email")
+    @PostMapping("/email")
     public ResponseEntity<CheckEmailResponse> checkEmail(@RequestBody CheckEmailRequest request){
         return ResponseEntity.ok(authService.isEmailExist(request.getEmail()));
     }
