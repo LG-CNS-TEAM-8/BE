@@ -10,5 +10,6 @@ public class UserSignUpRequest {
     private String email;
     private String password;
     private String name;
+    private List<String> interests;
     private Role role = Role.USER;
 }
