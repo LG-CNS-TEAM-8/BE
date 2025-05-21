@@ -16,10 +16,10 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserInfoResponse getUserInfo(Long id) {
+    public UserInfoDto getUserInfo(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        return UserInfoResponse.builder()
+        return UserInfoDto.builder()
                 .email(user.getEmail())
                 .name(user.getName())
                 .build();
