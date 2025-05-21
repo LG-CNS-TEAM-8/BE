@@ -26,4 +26,15 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    public User update(String email, String name) {
+        if (email != null && !email.trim().isEmpty()) {
+            this.email = email;
+        }
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name;
+        }
+
+        return this;
+    }
 }

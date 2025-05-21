@@ -1,15 +1,12 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.response.UserInfoResponse;
+import com.example.demo.dto.response.UserInfoDto;
 import com.example.demo.security.PrincipalDetails;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,8 +14,13 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<UserInfoResponse> getUser(@PathVariable Long id){
+    public ResponseEntity<UserInfoDto> getUser(@PathVariable Long id){
         return ResponseEntity.ok(userService.getUserInfo(id));
+    }
+
+    @PutMapping("/user")
+    public ResponseEntity<UserInfoDto> updateUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody UserInfoDto request){
+        return ResponseEntity.ok(userService.updateUserInfo(request, principalDetails.getId()));
     }
 
     @DeleteMapping("/user")

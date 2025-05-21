@@ -41,7 +41,12 @@ public class AuthService {
     }
 
     @Transactional
-    public UserSignUpResponse signUp(User user){
+    public UserSignUpResponse signUp(UserSignUpRequest body){
+        User user = User.builder()
+                .email(body.getEmail())
+                .name(body.getName())
+                .password(passwordEncoder.encode(body.getPassword()))
+                .build();
         try {
             userRepository.save(user);
         } catch (Exception e) {
