@@ -11,6 +11,7 @@ import com.example.demo.dto.response.UserSignUpResponse;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +21,15 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserLoginResponse login(String email, String password){
+    public UserLoginResponse login(UserLoginRequest body){
+        String email = body.getEmail();
+        String password = body.getPassword();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        if(!user.getPassword().equals(password))
+        if(!passwordEncoder.matches(password, user.getPassword()))
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
