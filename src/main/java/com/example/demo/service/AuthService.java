@@ -4,6 +4,7 @@ import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.RefreshToken;
 import com.example.demo.domain.User;
+import com.example.demo.dto.request.InterestRequestDto;
 import com.example.demo.dto.request.UserLoginRequest;
 import com.example.demo.dto.request.UserSignUpRequest;
 import com.example.demo.dto.response.CheckEmailResponse;
@@ -25,6 +26,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final InterestService interestService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -50,12 +52,16 @@ public class AuthService {
                 .email(body.getEmail())
                 .name(body.getName())
                 .password(passwordEncoder.encode(body.getPassword()))
+                .role(body.getRole())
                 .build();
-        try {
-            userRepository.save(user);
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
+        List<String> interests = body.getInterests();
+        userRepository.save(user);
+
+        InterestRequestDto dto = new InterestRequestDto();
+        dto.setName(interests);
+        dto.setUserId(user.getId());
+        interestService.addInterest(dto);
+
         return new UserSignUpResponse(user.getId());
     }
 

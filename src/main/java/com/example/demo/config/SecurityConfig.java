@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         .requestMatchers("/login","/sign-up","/swagger-ui/**","/v3/api-docs/**", "/error", "/email").permitAll()
                         .anyRequest().authenticated())
+                .logout(AbstractHttpConfigurer::disable)
                 .exceptionHandling(handler ->
                         handler.authenticationEntryPoint(jwtAuthenticationEntryPoint));
         return http.build();
