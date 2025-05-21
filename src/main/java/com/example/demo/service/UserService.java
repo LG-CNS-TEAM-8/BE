@@ -3,7 +3,7 @@ package com.example.demo.service;
 import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.User;
-import com.example.demo.dto.response.UserInfoResponse;
+import com.example.demo.dto.response.UserInfoDto;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,22 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserInfoResponse getUserInfo(Long id) {
+    public UserInfoDto getUserInfo(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        return UserInfoResponse.builder()
+        return UserInfoDto.builder()
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
+
+    @Transactional
+    public UserInfoDto updateUserInfo(UserInfoDto request, Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        user.update(request.getEmail(), request.getName());
+        userRepository.save(user);
+        return UserInfoDto.builder()
                 .email(user.getEmail())
                 .name(user.getName())
                 .build();
