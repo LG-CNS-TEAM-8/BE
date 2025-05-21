@@ -3,11 +3,16 @@ package com.example.demo.service;
 import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.Favorite;
+import com.example.demo.domain.Interest;
 import com.example.demo.domain.News;
+import com.example.demo.domain.UserInterest;
+import com.example.demo.dto.response.InterestResponseDto;
 import com.example.demo.dto.response.NewsResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.repository.FavoriteRepository;
+import com.example.demo.repository.InterestRepository;
 import com.example.demo.repository.NewsRepository;
+import com.example.demo.repository.UserInterestRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +36,11 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +58,7 @@ public class NewsService {
     private final OpenAiChatModel openAiChatModel;
     private final ObjectMapper objectMapper;
     private final FavoriteRepository favoriteRepository;
+    private final UserInterestRepository userInterestRepository;
 
     public List<NewsResponse> getNews(Long userId) {
         List<News> newsList = newsRepository.findAll();
@@ -72,8 +81,12 @@ public class NewsService {
     }
 
     @Transactional
-    public String getKeyword() {
-        List<String> interests = List.of("경제", "IT", "주식", "대선");
+    public String getKeyword(Long userId) {
+        List<String> interests = userInterestRepository.findByUserId(userId).stream()
+                .map(UserInterest::getInterest)
+                .map(Interest::getName)
+                .collect(Collectors.toList());
+
         List<News> newsList = newsRepository.findAll();
 
         String interestStr = String.join(", ", interests);
@@ -103,7 +116,7 @@ public class NewsService {
         );
     }
 
-    public List<NewsResponse> getSearchNews(String search,Long userId) {
+    public List<NewsResponse> getSearchNews(String search, Long userId) {
         List<NewsResponse> dtos = new ArrayList<>();
         String response = naverSearchApi(search, null, null);
         List<String> favorites = getUserFavorite(userId);
@@ -121,6 +134,7 @@ public class NewsService {
                     String title = Jsoup.parse(item.path("title").asText()).text();
                     String description = Jsoup.parse(item.path("description").asText()).text();
                     String thumbnail = getThumbnail(link);
+                    String pubDate = dateParser(Jsoup.parse(item.path("pubDate").asText()).text());
                     boolean isFavorite = favorites != null && favorites.contains(link);
                     dtos.add(NewsResponse.builder()
                             .title(title)
@@ -128,6 +142,7 @@ public class NewsService {
                             .thumbnail(thumbnail)
                             .favorite(isFavorite)
                             .description(description)
+                            .pubDate(pubDate)
                             .build());
                 }
             } else {
@@ -177,6 +192,7 @@ public class NewsService {
                         String title = Jsoup.parse(item.path("title").asText()).text();
                         String description = Jsoup.parse(item.path("description").asText()).text();
                         String thumbnail = getThumbnail(link);
+                        String pubDate = dateParser(Jsoup.parse(item.path("pubDate").asText()).text());
                         boolean isFavorite = favorites != null && favorites.contains(link);
                         dtos.add(NewsResponse.builder()
                                 .title(title)
@@ -184,6 +200,7 @@ public class NewsService {
                                 .thumbnail(thumbnail)
                                 .description(description)
                                 .favorite(isFavorite)
+                                .pubDate(pubDate)
                                 .build());
 
                         collected++;
@@ -351,5 +368,14 @@ public class NewsService {
         return list.stream()
                 .map(Favorite::getNewsLink)
                 .collect(Collectors.toList());
+    }
+
+    public String dateParser(String input) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE HH:mm", Locale.KOREAN);
+
+        OffsetDateTime dateTime = OffsetDateTime.parse(input, inputFormatter);
+        return dateTime.format(outputFormatter);
     }
 }

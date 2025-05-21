@@ -46,7 +46,7 @@ public class NewsController {
     @GetMapping({"/news/ai", "/news/ai/{start}"})
     public ResponseEntity<List<NewsResponse>> getPrompt(@PathVariable(required = false) Integer start,
                                                         @AuthenticationPrincipal PrincipalDetails principal) {
-        String prompt = newsService.getKeyword();
+        String prompt = newsService.getKeyword(principal.getId());
         List<NewsResponse> response = newsService.getResponse(prompt, start,principal.getId());
         return ResponseEntity.ok(response);
     }
