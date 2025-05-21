@@ -3,11 +3,16 @@ package com.example.demo.service;
 import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.Favorite;
+import com.example.demo.domain.Interest;
 import com.example.demo.domain.News;
+import com.example.demo.domain.UserInterest;
+import com.example.demo.dto.response.InterestResponseDto;
 import com.example.demo.dto.response.NewsResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.repository.FavoriteRepository;
+import com.example.demo.repository.InterestRepository;
 import com.example.demo.repository.NewsRepository;
+import com.example.demo.repository.UserInterestRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +55,7 @@ public class NewsService {
     private final OpenAiChatModel openAiChatModel;
     private final ObjectMapper objectMapper;
     private final FavoriteRepository favoriteRepository;
+    private final UserInterestRepository userInterestRepository;
 
     public List<NewsResponse> getNews(Long userId) {
         List<News> newsList = newsRepository.findAll();
@@ -72,8 +78,12 @@ public class NewsService {
     }
 
     @Transactional
-    public String getKeyword() {
-        List<String> interests = List.of("경제", "IT", "주식", "대선");
+    public String getKeyword(Long userId) {
+        List<String> interests = userInterestRepository.findByUserId(userId).stream()
+                .map(UserInterest::getInterest)
+                .map(Interest::getName)
+                .collect(Collectors.toList());
+
         List<News> newsList = newsRepository.findAll();
 
         String interestStr = String.join(", ", interests);
