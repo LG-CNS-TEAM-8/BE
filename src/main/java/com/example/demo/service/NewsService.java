@@ -8,6 +8,7 @@ import com.example.demo.domain.News;
 import com.example.demo.domain.UserInterest;
 import com.example.demo.dto.response.InterestResponseDto;
 import com.example.demo.dto.response.NewsResponse;
+import com.example.demo.dto.response.NewsResultResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.repository.FavoriteRepository;
 import com.example.demo.repository.InterestRepository;
@@ -156,12 +157,14 @@ public class NewsService {
         return dtos;
     }
 
-    public List<NewsResponse> getResponse(String keyword, Integer start, Long userId) {
+    public NewsResultResponse getResponse(String keyword, Integer start, Long userId) {
         System.out.println("keyword : " + keyword);
         List<NewsResponse> dtos = new ArrayList<>();
         String[] keywords = keyword.split(" ");
         int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
         List<String> favorites = getUserFavorite(userId);
+        int max = 0;
+
         outer:
         for (String k : keywords) {
             int collected = 0;
@@ -211,7 +214,7 @@ public class NewsService {
 
                     // 다음 페이지로 넘어갈 수 있도록 start 증가
                     start += display;
-
+                    max = Math.max(start, max);
                 } catch (Exception e) {
                     log.error("[News Service] getResponse", e);
                     throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
@@ -221,7 +224,10 @@ public class NewsService {
             if (dtos.size() >= TOTAL_ITEM_SIZE) break outer;
         }
 
-        return dtos;
+        return NewsResultResponse.builder()
+                .newsList(dtos)
+                .start(max)
+                .build();
     }
 
 

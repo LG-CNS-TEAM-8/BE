@@ -4,6 +4,7 @@ import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.dto.request.NewsSummaryRequest;
 import com.example.demo.dto.response.NewsResponse;
+import com.example.demo.dto.response.NewsResultResponse;
 import com.example.demo.dto.response.NewsSummaryResponse;
 import com.example.demo.security.PrincipalDetails;
 import com.example.demo.service.NewsService;
@@ -42,11 +43,11 @@ public class NewsController {
 
     @Operation(summary = "AI 추천 뉴스 조회", description = "사용자의 관심사 기반 AI 추천 뉴스를 조회합니다.")
     @GetMapping({"/news/ai", "/news/ai/{start}"})
-    public ResponseEntity<List<NewsResponse>> getPrompt(
+    public ResponseEntity<NewsResultResponse> getPrompt(
             @Parameter(description = "페이징 시작 인덱스 10단위 (선택)", example = "11") @PathVariable(required = false) Integer start,
             @Parameter(hidden = true) @AuthenticationPrincipal PrincipalDetails principal) {
         String prompt = newsService.getKeyword(principal.getId());
-        List<NewsResponse> response = newsService.getResponse(prompt, start,principal.getId());
+        NewsResultResponse response = newsService.getResponse(prompt, start,principal.getId());
         return ResponseEntity.ok(response);
     }
 
