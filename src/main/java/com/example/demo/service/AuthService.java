@@ -4,6 +4,8 @@ import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.RefreshToken;
 import com.example.demo.domain.User;
+import com.example.demo.dto.request.UserLoginRequest;
+import com.example.demo.dto.request.UserSignUpRequest;
 import com.example.demo.dto.response.CheckEmailResponse;
 import com.example.demo.dto.response.CreateNewAccessTokenResponse;
 import com.example.demo.dto.response.UserLoginResponse;
@@ -14,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
