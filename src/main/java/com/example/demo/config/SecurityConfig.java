@@ -5,6 +5,7 @@ import com.example.demo.security.jwt.JwtAuthenticationEntryPoint;
 import com.example.demo.security.jwt.JwtFilter;
 import com.example.demo.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,8 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Value("${frontend.origin}")
+    private String frontendOrigin;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,7 +41,7 @@ public class SecurityConfig {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowCredentials(true);
                         //config.addAllowedOrigin("*");
-                        config.setAllowedOrigins(List.of("http://localhost:3000"));
+                        config.setAllowedOrigins(List.of("http://localhost:3000", frontendOrigin));
                         config.addAllowedHeader("*");
                         config.addAllowedMethod("*");
                         return config;
