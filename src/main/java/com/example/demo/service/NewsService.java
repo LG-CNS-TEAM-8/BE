@@ -164,13 +164,12 @@ public class NewsService {
         int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
         List<String> favorites = getUserFavorite(userId);
         int max = 0;
-
+        start %= 1000;
         outer:
         for (String k : keywords) {
             int collected = 0;
             start = (start == null) ? 1 : start;
             int display = 20;
-
             while (collected < perKeywordSize) {
                 String response = naverSearchApi(k, display, start);
 
@@ -215,6 +214,10 @@ public class NewsService {
                     // 다음 페이지로 넘어갈 수 있도록 start 증가
                     start += display;
                     max = Math.max(start, max);
+                    if(start > 1000){
+                        max = start;
+                        start %= 1000;
+                    }
                 } catch (Exception e) {
                     log.error("[News Service] getResponse", e);
                     throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
