@@ -28,7 +28,7 @@ jwt:
   secret: ${JWT_SECRET}
 
 frontend:
-  origin: http://localhost:3000/ # 또는 http://localhost:5173/
+  origin: ${FRONTEND_ORIGIN}
 
 naver:
   client:
