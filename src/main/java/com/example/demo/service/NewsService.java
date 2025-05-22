@@ -6,10 +6,7 @@ import com.example.demo.domain.Favorite;
 import com.example.demo.domain.Interest;
 import com.example.demo.domain.News;
 import com.example.demo.domain.UserInterest;
-import com.example.demo.dto.response.InterestResponseDto;
-import com.example.demo.dto.response.NewsResponse;
-import com.example.demo.dto.response.NewsResultResponse;
-import com.example.demo.dto.response.NewsSummaryResponse;
+import com.example.demo.dto.response.*;
 import com.example.demo.repository.FavoriteRepository;
 import com.example.demo.repository.InterestRepository;
 import com.example.demo.repository.NewsRepository;
@@ -87,19 +84,23 @@ public class NewsService {
                 .map(UserInterest::getInterest)
                 .map(Interest::getName)
                 .collect(Collectors.toList());
-
+        List<String> favorites = favoriteRepository.findByUserId(userId).stream()
+                .map(Favorite::getNewsCategory)
+                .toList();
         List<News> newsList = newsRepository.findAll();
 
         String interestStr = String.join(", ", interests);
-
+        String favoriteStr = String.join(", ",favorites);
         String titles = newsList.stream()
                 .map(news -> news.getTitle() + " (" + news.getCategory() + ")")
                 .collect(Collectors.joining("\n- ", "- ", ""));
 
         return openAiChatModel.call(
                 """
-                        사용자의 관심사는 다음과 같습니다: %s
-                        
+                        사용자의 관심사는 다음과 같습니다:
+                        %s
+                        사용자가 좋아하는 뉴스의 카테고리는 다음과 같습니다 :
+                        %s
                         오늘의 뉴스 헤드라인과 카테고리는 다음과 같습니다:
                         %s
                         
@@ -111,7 +112,7 @@ public class NewsService {
                         - 사용자의 관심사와 관련된 키워드는 높은 우선순위를 갖습니다.
                         - 뉴스 헤드라인에서 의미 있는 키워드를 충분히 도출할 수 없을 경우, 사용자 관심사 기반으로 **최신 트렌드를 반영한 키워드**를 생성해주세요.
                         - 추천된 검색어는 공백으로 구분된 5개의 단어로만 출력해주세요 (쉼표 없이).
-                        """.formatted(interestStr, titles)
+                        """.formatted(interestStr, favoriteStr, titles)
 
         );
     }
@@ -159,13 +160,12 @@ public class NewsService {
     }
 
     public NewsResultResponse getResponse(String keyword, Integer start, Long userId) {
-        System.out.println("keyword : " + keyword);
         List<NewsResponse> dtos = new ArrayList<>();
         String[] keywords = keyword.split(" ");
         int perKeywordSize = TOTAL_ITEM_SIZE / keywords.length;
         List<String> favorites = getUserFavorite(userId);
         int max = 0;
-        start %= 1000;
+        start = start!=null?start %= 1000:start;
         outer:
         for (String k : keywords) {
             int collected = 0;
@@ -302,7 +302,7 @@ public class NewsService {
                 .queryParam("query", query)
                 .queryParam("display", display)
                 .queryParam("start", start)
-                .queryParam("sort", "date")
+//                .queryParam("sort", "date")
                 .encode(Charset.forName("UTF-8"))
                 .build()
                 .toUri();
