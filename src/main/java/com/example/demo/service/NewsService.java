@@ -134,13 +134,15 @@ public class NewsService {
                     }
                     String title = Jsoup.parse(item.path("title").asText()).text();
                     String description = Jsoup.parse(item.path("description").asText()).text();
-                    String thumbnail = getThumbnail(link);
+                    List<String> newInfo = getNewsInfo(link);
+                    if(newInfo == null) continue;
                     String pubDate = dateParser(Jsoup.parse(item.path("pubDate").asText()).text());
                     boolean isFavorite = favorites != null && favorites.contains(link);
                     dtos.add(NewsResponse.builder()
                             .title(title)
                             .link(link)
-                            .thumbnail(thumbnail)
+                            .thumbnail(newInfo.get(0))
+                            .category(newInfo.get(1))
                             .favorite(isFavorite)
                             .description(description)
                             .pubDate(pubDate)
@@ -193,13 +195,15 @@ public class NewsService {
 
                         String title = Jsoup.parse(item.path("title").asText()).text();
                         String description = Jsoup.parse(item.path("description").asText()).text();
-                        String thumbnail = getThumbnail(link);
+                        List<String> newsInfo = getNewsInfo(link);
+                        if(newsInfo == null) continue;
                         String pubDate = dateParser(Jsoup.parse(item.path("pubDate").asText()).text());
                         boolean isFavorite = favorites != null && favorites.contains(link);
                         dtos.add(NewsResponse.builder()
                                 .title(title)
                                 .link(link)
-                                .thumbnail(thumbnail)
+                                .thumbnail(newsInfo.get(0))
+                                .category(newsInfo.get(1))
                                 .description(description)
                                 .favorite(isFavorite)
                                 .pubDate(pubDate)
@@ -291,7 +295,7 @@ public class NewsService {
     }
 
     public String naverSearchApi(String query, Integer display, Integer start) {
-        if (display == null) display = 10;
+        if (display == null) display = 100;
         if (start == null) start = 1;
         URI uri = UriComponentsBuilder
                 .fromUriString("https://openapi.naver.com")
@@ -317,18 +321,32 @@ public class NewsService {
                 .block();
     }
 
-    public String getThumbnail(String path) {
+    public List<String> getNewsInfo(String path) {
         try {
+            List<String> newsInfo = new ArrayList<>();
+            String imageUrl = null;
+            String category = null;
             Document doc = Jsoup.connect(path).get();
             org.jsoup.select.Elements newsLists = doc.select("div[id^=img_a1]");
             for (Element news : newsLists) {
                 Element img = news.selectFirst("img");
                 if (img != null) {
-                    String imageUrl = img.attr("data-src");
-                    return imageUrl;
+                    imageUrl = img.attr("data-src");
+                    newsInfo.add(imageUrl);
+                    break;
                 }
             }
-            return null;
+            Element selectedLink = doc.selectFirst("a.Nitem_link[aria-selected=true]");
+
+            if (selectedLink != null) {
+                Element span = selectedLink.selectFirst("span.Nitem_link_menu");
+                if (span != null) {
+                   category = span.text();
+                   newsInfo.add(category);
+                }
+            }
+            if(newsInfo.size()<2) return null;
+            return newsInfo;
         } catch (Exception e) {
             log.error("[News Service] getThumbnail");
             throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
