@@ -5,6 +5,7 @@ import com.example.demo.common.exception.ErrorCode;
 import com.example.demo.domain.User;
 import com.example.demo.dto.request.InterestRequestDto;
 import com.example.demo.dto.response.UserInfoDto;
+import com.example.demo.repository.FavoriteRepository;
 import com.example.demo.repository.UserInterestRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final InterestService interestService;
     private final UserInterestRepository userInterestRepository;
+    private final FavoriteRepository favoriteRepository;
 
     @Transactional
     public UserInfoDto getUserInfo(Long id) {
@@ -56,6 +58,7 @@ public class UserService {
     public String deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        favoriteRepository.deleteByUser(user);
         userInterestRepository.deleteByUser(user);
         userRepository.delete(user);
         return "User Deleted";
