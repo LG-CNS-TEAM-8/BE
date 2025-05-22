@@ -10,4 +10,5 @@ import java.util.List;
 public class UserInfoDto {
     private String email;
     private String name;
+    private List<String> interests;
 }

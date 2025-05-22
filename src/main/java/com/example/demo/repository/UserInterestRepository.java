@@ -14,5 +14,6 @@ public interface UserInterestRepository extends JpaRepository<UserInterest, User
 
     boolean existsByUserAndInterest(User user, Interest interest);
     void deleteByUserAndInterest(User user, Interest interest);
-    
+
+    void deleteByUser(User user);
 }
