@@ -380,7 +380,6 @@ public class NewsService {
 
     public NewsSummaryResponse getSummary(String link) {
         try {
-            link = "https://m.entertain.naver.com/article/076/0004279795";
             Document doc = Jsoup.connect(link).get();
             Elements article;
            if(link.contains("https://n.news.naver.com") || link.contains("https://news.naver.com")) article = doc.select("article[id^=dic_area]");
