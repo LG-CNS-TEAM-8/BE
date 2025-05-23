@@ -118,6 +118,8 @@ public class NewsService {
     }
 
     public List<NewsResponse> getSearchNews(String search, Long userId) {
+        log.info("search keyword : {}",search);
+        log.info("user id : {}",userId);
         List<NewsResponse> dtos = new ArrayList<>();
         String response = naverSearchApi(search, null, null);
         List<String> favorites = getUserFavorite(userId);
@@ -128,10 +130,11 @@ public class NewsService {
             if (items.isArray()) {
                 for (JsonNode item : items) {
                     String link = item.path("link").asText();
-                    if (!link.contains("https://n.news.naver.com") && !link.contains("https://news.naver.com")) {
-                        //네이버 뉴스기사만 가져옴
-                        continue;
-                    }
+                    if (    !link.contains("https://n.news.naver.com") &&
+                            !link.contains("https://news.naver.com") &&
+                            !link.contains("https://m.sports.naver.com") &&
+                            !link.contains("https://m.entertain.naver.com")) continue; //네이버 뉴스 기사만 가져옴
+
                     String title = Jsoup.parse(item.path("title").asText()).text();
                     String description = Jsoup.parse(item.path("description").asText()).text();
                     List<String> newInfo = getNewsInfo(link);
@@ -153,6 +156,7 @@ public class NewsService {
             }
         } catch (Exception e) {
             log.error("[News Service] getSearchNews");
+            e.printStackTrace();
             throw new CustomException(ErrorCode.NEWS_PARSING_ERROR);
         }
 
@@ -185,7 +189,11 @@ public class NewsService {
 
                     for (JsonNode item : items) {
                         String link = item.path("link").asText();
-                        if (!link.contains("https://n.news.naver.com") && !link.contains("https://news.naver.com")) {
+                        if (    !link.contains("https://n.news.naver.com") &&
+                                !link.contains("https://news.naver.com") &&
+                                !link.contains("https://m.sports.naver.com") &&
+                                !link.contains("https://m.entertain.naver.com")
+                        ) {
                             continue;
                         }
                         if (dtos.stream().anyMatch(dto -> dto.getLink().equals(link))) {
@@ -322,29 +330,47 @@ public class NewsService {
 
     public List<String> getNewsInfo(String path) {
         try {
+
             List<String> newsInfo = new ArrayList<>();
             String imageUrl = null;
             String category = null;
             Document doc = Jsoup.connect(path).get();
-            org.jsoup.select.Elements newsLists = doc.select("div[id^=img_a1]");
-            for (Element news : newsLists) {
-                Element img = news.selectFirst("img");
-                if (img != null) {
-                    imageUrl = img.attr("data-src");
-                    newsInfo.add(imageUrl);
-                    break;
+            if(path.contains("https://n.news.naver.com") || path.contains("https://news.naver.com")) {
+                org.jsoup.select.Elements newsLists = doc.select("div[id^=img_a1]");
+                for (Element news : newsLists) {
+                    Element img = news.selectFirst("img");
+                    if (img != null) {
+                        imageUrl = img.attr("data-src");
+                        newsInfo.add(imageUrl);
+                        break;
+                    }
                 }
-            }
-            Element selectedLink = doc.selectFirst("a.Nitem_link[aria-selected=true]");
+                Element selectedLink = doc.selectFirst("a.Nitem_link[aria-selected=true]");
 
-            if (selectedLink != null) {
-                Element span = selectedLink.selectFirst("span.Nitem_link_menu");
-                if (span != null) {
-                   category = span.text();
-                   newsInfo.add(category);
+                if (selectedLink != null) {
+                    Element span = selectedLink.selectFirst("span.Nitem_link_menu");
+                    if (span != null) {
+                        category = span.text();
+                        newsInfo.add(category);
+                    }
                 }
+                if (newsInfo.size() < 2) return null;
+
+                return newsInfo;
             }
-            if(newsInfo.size()<2) return null;
+                org.jsoup.select.Elements newsLists = doc.select("span[class^=ArticleImage_image_wrap]");
+                for (Element news : newsLists) {
+                    Element img = news.selectFirst("img");
+                    if (img != null) {
+                        imageUrl = img.attr("src");
+                        newsInfo.add(imageUrl);
+                        break;
+                    }
+                }
+                if(path.contains("sports")) newsInfo.add("스포츠");
+                newsInfo.add("엔터테인먼트");
+                if (newsInfo.size() < 2) return null;
+
             return newsInfo;
         } catch (Exception e) {
             log.error("[News Service] getThumbnail");
@@ -354,9 +380,11 @@ public class NewsService {
 
     public NewsSummaryResponse getSummary(String link) {
         try {
+            link = "https://m.entertain.naver.com/article/076/0004279795";
             Document doc = Jsoup.connect(link).get();
-            Elements article = doc.select("article[id^=dic_area]");
-
+            Elements article;
+           if(link.contains("https://n.news.naver.com") || link.contains("https://news.naver.com")) article = doc.select("article[id^=dic_area]");
+           article = doc.select("div[class=_article_content]");
             if (!article.isEmpty()) {
                 // 불필요한 태그 제거
                 article.select("strong, span, div, em, img, script, style, br").remove();
