@@ -189,7 +189,11 @@ public class NewsService {
 
                     for (JsonNode item : items) {
                         String link = item.path("link").asText();
-                        if (!link.contains("https://n.news.naver.com") && !link.contains("https://news.naver.com")) {
+                        if (    !link.contains("https://n.news.naver.com") &&
+                                !link.contains("https://news.naver.com") &&
+                                !link.contains("https://m.sports.naver.com") &&
+                                !link.contains("https://m.entertain.naver.com")
+                        ) {
                             continue;
                         }
                         if (dtos.stream().anyMatch(dto -> dto.getLink().equals(link))) {
